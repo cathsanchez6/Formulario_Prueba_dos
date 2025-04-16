@@ -61,6 +61,7 @@
       fetch("https://script.google.com/macros/s/AKfycbxuis3v4KZSpOuLvsK4QChhwM5X01ZRot73x_fC0GC6Cxvz8YOFZnh0jvPEvKZ9lk7j/exec", {
         method: "POST",
         body: JSON.stringify(datos),
+        mode: "no-cors",
         headers: {
           "Content-Type": "application/json"
         }
