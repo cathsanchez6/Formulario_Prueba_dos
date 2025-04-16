@@ -50,34 +50,21 @@
   </div>
 
   <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbxuis3v4KZSpOuLvsK4QChhwM5X01ZRot73x_fC0GC6Cxvz8YOFZnh0jvPEvKZ9lk7j/exec';
+  const scriptURL = 'https://script.google.com/macros/s/AKfycbxuis3v4KZSpOuLvsK4QChhwM5X01ZRot73x_fC0GC6Cxvz8YOFZnh0jvPEvKZ9lk7j/exec';
+  const form = document.forms['formulario-contacto'];
 
-    document.getElementById('formulario').addEventListener('submit', e => {
-      e.preventDefault();
-
-      const form = e.target;
-      const data = {
-        nombre: form.nombre.value,
-        correo: form.correo.value,
-        telefono: form.telefono.value,
-        fecha: new Date().toLocaleString()
-      };
-
-      fetch(scriptURL, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(data)
-      }).then(() => {
-        alert('Formulario enviado correctamente');
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    fetch(scriptURL, { method: 'POST', body: new FormData(form)})
+      .then(response => {
+        alert("Enviado exitosamente.");
         form.reset();
-      }).catch(error => {
-        alert('Error al enviar el formulario');
-        console.error(error);
+      })
+      .catch(error => {
+        alert("Error al enviar.");
+        console.error('Error!', error.message);
       });
-    });
-  </script>
+  });
+</script>
 </body>
 </html>
