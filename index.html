@@ -2,84 +2,82 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Formulario de Prueba</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Formulario de contacto</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      padding: 20px;
-      background-color: #f4f4f4;
+      background-color: #f2f2f2;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
     }
-    form {
+    .formulario {
       background: white;
       padding: 20px;
-      max-width: 400px;
-      margin: auto;
       border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      width: 300px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
     }
     input {
       width: 100%;
-      padding: 10px;
       margin-bottom: 10px;
-      border-radius: 5px;
-      border: 1px solid #ccc;
+      padding: 10px;
+      font-size: 16px;
     }
     button {
+      width: 100%;
       padding: 10px;
-      background-color: #4CAF50;
+      background-color: green;
       color: white;
       border: none;
-      border-radius: 5px;
       cursor: pointer;
-      width: 100%;
-    }
-    button:hover {
-      background-color: #45a049;
+      font-size: 16px;
+      border-radius: 5px;
     }
   </style>
 </head>
 <body>
-
-  <form id="formulario">
+  <div class="formulario">
     <h2>Formulario de contacto</h2>
-    <input type="text" id="nombre" placeholder="Nombre completo" required>
-    <input type="email" id="correo" placeholder="Correo electrónico" required>
-    <input type="text" id="telefono" placeholder="Teléfono" required>
-    <button type="submit">Enviar</button>
-  </form>
+    <form id="formulario">
+      <input type="text" name="nombre" placeholder="Nombre" required>
+      <input type="email" name="correo" placeholder="Correo" required>
+      <input type="tel" name="telefono" placeholder="Teléfono" required>
+      <button type="submit">Enviar</button>
+    </form>
+  </div>
 
   <script>
-    document.getElementById("formulario").addEventListener("submit", function(e) {
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbxuis3v4KZSpOuLvsK4QChhwM5X01ZRot73x_fC0GC6Cxvz8YOFZnh0jvPEvKZ9lk7j/exec';
+
+    document.getElementById('formulario').addEventListener('submit', e => {
       e.preventDefault();
 
-      const datos = {
-        nombre: document.getElementById("nombre").value,
-        correo: document.getElementById("correo").value,
-        telefono: document.getElementById("telefono").value
+      const form = e.target;
+      const data = {
+        nombre: form.nombre.value,
+        correo: form.correo.value,
+        telefono: form.telefono.value,
+        fecha: new Date().toLocaleString()
       };
 
-      fetch("https://script.google.com/macros/s/AKfycbxuis3v4KZSpOuLvsK4QChhwM5X01ZRot73x_fC0GC6Cxvz8YOFZnh0jvPEvKZ9lk7j/exec", {
-        method: "POST",
-        body: JSON.stringify(datos),
-        mode: "no-cors",
+      fetch(scriptURL, {
+        method: 'POST',
+        mode: 'no-cors',
         headers: {
-          "Content-Type": "application/json"
-        }
-      })
-      .then(res => res.text())
-      .then(respuesta => {
-        if (respuesta.includes("OK")) {
-          alert("Formulario enviado correctamente.");
-          document.getElementById("formulario").reset();
-        } else {
-          alert("Error al enviar: " + respuesta);
-        }
-      })
-      .catch(error => {
-        alert("Error de red: " + error);
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+      }).then(() => {
+        alert('Formulario enviado correctamente');
+        form.reset();
+      }).catch(error => {
+        alert('Error al enviar el formulario');
+        console.error(error);
       });
     });
   </script>
-
 </body>
 </html>
