@@ -45,60 +45,62 @@
       <input type="text" name="nombre" placeholder="Nombre" required>
       <input type="email" name="correo" placeholder="Correo" required>
       <input type="tel" name="telefono" placeholder="Teléfono" required>
+
       <div>
-  <label for="foto">Foto:</label><br>
-  <video id="video" width="300" height="200" autoplay></video><br>
-  <button type="button" id="capturar">Capturar Foto</button><br>
-  <canvas id="canvas" width="300" height="200" style="display:none;"></canvas>
-  <input type="hidden" name="foto" id="foto">
-  <img id="preview" style="max-width:100%; display:none;" />
-</div>
+        <label for="foto">Foto:</label><br>
+        <video id="video" width="300" height="200" autoplay></video><br>
+        <button type="button" id="capturar">Capturar Foto</button><br>
+        <canvas id="canvas" width="300" height="200" style="display:none;"></canvas>
+        <input type="hidden" name="foto" id="foto">
+        <img id="preview" style="max-width:100%; display:none;" />
+      </div>
+
       <button type="submit">Enviar</button>
     </form>
   </div>
 
   <script>
-  const scriptURL = 'https://script.google.com/macros/s/AKfycbwGgCytrX0cn3uWDCbO2OIyKQ9dmQkthgSsz6D9n2NbY4Zv4MPKmmWuugefx-ra2NUw/exec';
-  const form = document.getElementById('formulario');
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbwGgCytrX0cn3uWDCbO2OIyKQ9dmQkthgSsz6D9n2NbY4Zv4MPKmmWuugefx-ra2NUw/exec';
+    const form = document.getElementById('formulario');
 
-    <script>
-  const video = document.getElementById('video');
-  const canvas = document.getElementById('canvas');
-  const capturarBtn = document.getElementById('capturar');
-  const fotoInput = document.getElementById('foto');
-  const preview = document.getElementById('preview');
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const capturarBtn = document.getElementById('capturar');
+    const fotoInput = document.getElementById('foto');
+    const preview = document.getElementById('preview');
 
-  // Solicita acceso a la cámara
-  navigator.mediaDevices.getUserMedia({ video: true })
-    .then(stream => {
-      video.srcObject = stream;
-    })
-    .catch(err => {
-      console.error("Error al acceder a la cámara: ", err);
+    // Acceder a la cámara
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => {
+        video.srcObject = stream;
+      })
+      .catch(err => {
+        console.error("Error al acceder a la cámara: ", err);
+      });
+
+    // Capturar la imagen
+    capturarBtn.addEventListener('click', () => {
+      canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+      const imageData = canvas.toDataURL('image/png');
+      fotoInput.value = imageData;
+      preview.src = imageData;
+      preview.style.display = 'block';
     });
 
-  // Captura la imagen y la guarda en el input oculto
-  capturarBtn.addEventListener('click', () => {
-    canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
-    const imageData = canvas.toDataURL('image/png');
-    fotoInput.value = imageData;
-    preview.src = imageData;
-    preview.style.display = 'block';
-  });
-</script>
-
-  form.addEventListener('submit', e => {
-    e.preventDefault();
-    fetch(scriptURL, { method: 'POST', body: new FormData(form)})
-      .then(response => {
-        alert("Enviado exitosamente.");
-        form.reset();
-      })
-      .catch(error => {
-        alert("Error al enviar.");
-        console.error('Error!', error.message);
-      });
-  });
+    // Enviar el formulario
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      fetch(scriptURL, { method: 'POST', body: new FormData(form)})
+        .then(response => {
+          alert("Enviado exitosamente.");
+          form.reset();
+          preview.style.display = 'none';
+        })
+        .catch(error => {
+          alert("Error al enviar.");
+          console.error('Error!', error.message);
+        });
+    });
   </script>
 </body>
 </html>
