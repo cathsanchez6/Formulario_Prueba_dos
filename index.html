@@ -45,13 +45,47 @@
       <input type="text" name="nombre" placeholder="Nombre" required>
       <input type="email" name="correo" placeholder="Correo" required>
       <input type="tel" name="telefono" placeholder="Teléfono" required>
+      <div>
+  <label for="foto">Foto:</label><br>
+  <video id="video" width="300" height="200" autoplay></video><br>
+  <button type="button" id="capturar">Capturar Foto</button><br>
+  <canvas id="canvas" width="300" height="200" style="display:none;"></canvas>
+  <input type="hidden" name="foto" id="foto">
+  <img id="preview" style="max-width:100%; display:none;" />
+</div>
       <button type="submit">Enviar</button>
     </form>
   </div>
 
   <script>
-  const scriptURL = 'https://script.google.com/macros/s/AKfycbzp7Ea0CgIjMJd8r7BH0MxxkfKhrqCN6HlGA2-A3-iKxCe8IgX-ilW2WyCeOf4_9hRS/exec';
+  const scriptURL = 'https://script.google.com/macros/s/AKfycbwGgCytrX0cn3uWDCbO2OIyKQ9dmQkthgSsz6D9n2NbY4Zv4MPKmmWuugefx-ra2NUw/exec';
   const form = document.getElementById('formulario');
+
+    <script>
+  const video = document.getElementById('video');
+  const canvas = document.getElementById('canvas');
+  const capturarBtn = document.getElementById('capturar');
+  const fotoInput = document.getElementById('foto');
+  const preview = document.getElementById('preview');
+
+  // Solicita acceso a la cámara
+  navigator.mediaDevices.getUserMedia({ video: true })
+    .then(stream => {
+      video.srcObject = stream;
+    })
+    .catch(err => {
+      console.error("Error al acceder a la cámara: ", err);
+    });
+
+  // Captura la imagen y la guarda en el input oculto
+  capturarBtn.addEventListener('click', () => {
+    canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+    const imageData = canvas.toDataURL('image/png');
+    fotoInput.value = imageData;
+    preview.src = imageData;
+    preview.style.display = 'block';
+  });
+</script>
 
   form.addEventListener('submit', e => {
     e.preventDefault();
