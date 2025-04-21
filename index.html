@@ -65,46 +65,57 @@
       <label>Foto:</label>
       <video id="video" autoplay playsinline></video>
       <button type="button" class="btn-secundario" id="capturar">Capturar Foto</button>
-      <canvas id="canvas" width="300" height="200" style="display:none;"></canvas>
+      <canvas id="canvasFoto" width="300" height="200" style="display:none;"></canvas>
       <input type="hidden" name="foto" id="foto" />
-      <img id="preview" style="display:none;" />
+      <img id="previewFoto" style="display:none;" />
 
       <label>Firma digital:</label>
       <canvas id="canvasFirma" width="300" height="150"></canvas>
       <button type="button" class="btn-secundario" id="borrarFirma">Borrar Firma</button>
       <input type="hidden" name="firma" id="firma" />
+      <img id="previewFirma" style="display:none;"/>
 
       <button type="submit">Enviar</button>
     </form>
   </div>
 
   <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbyMY5sBqaO2pFPN0B-Nslix7GsfmVwDnMBAHdXopCbq_XHPkLWY6IRKH-iTy1B2rREm/exec';
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbwGgCytrX0cn3uWDCbO2OIyKQ9dmQkthgSsz6D9n2NbY4Zv4MPKmmWuugefx-ra2NUw/exec';
     const form = document.getElementById('formulario');
 
-    // CÁMARA
+    // === CÁMARA ===
     const video = document.getElementById('video');
-    const canvas = document.getElementById('canvas');
+    const canvasFoto = document.getElementById('canvasFoto');
     const capturarBtn = document.getElementById('capturar');
     const fotoInput = document.getElementById('foto');
-    const preview = document.getElementById('preview');
+    const previewFoto = document.getElementById('previewFoto');
+
+    let stream;
 
     navigator.mediaDevices.getUserMedia({ video: true })
-      .then(stream => video.srcObject = stream)
+      .then(s => {
+        stream = s;
+        video.srcObject = stream;
+      })
       .catch(err => console.error("Error al acceder a la cámara:", err));
 
     capturarBtn.addEventListener('click', () => {
-      canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
-      const imageData = canvas.toDataURL('image/png');
+      canvasFoto.getContext('2d').drawImage(video, 0, 0, canvasFoto.width, canvasFoto.height);
+      const imageData = canvasFoto.toDataURL('image/png');
       fotoInput.value = imageData;
-      preview.src = imageData;
-      preview.style.display = 'block';
+      previewFoto.src = imageData;
+      previewFoto.style.display = 'block';
+
+      // Detener cámara
+      stream.getTracks().forEach(track => track.stop());
+      video.style.display = 'none';
     });
 
-    // FIRMA DIGITAL
+    // === FIRMA DIGITAL ===
     const canvasFirma = document.getElementById('canvasFirma');
     const borrarFirma = document.getElementById('borrarFirma');
     const firmaInput = document.getElementById('firma');
+    const previewFirma = document.getElementById('previewFirma');
     const ctxFirma = canvasFirma.getContext('2d');
 
     let dibujando = false;
@@ -135,7 +146,10 @@
 
     const terminarDibujo = () => {
       dibujando = false;
-      firmaInput.value = canvasFirma.toDataURL('image/png');
+      const firmaData = canvasFirma.toDataURL('image/png');
+      firmaInput.value = firmaData;
+      previewFirma.src = firmaData;
+      previewFirma.style.display = 'block';
     };
 
     canvasFirma.addEventListener('mousedown', empezarDibujo);
@@ -149,16 +163,24 @@
     borrarFirma.addEventListener('click', () => {
       ctxFirma.clearRect(0, 0, canvasFirma.width, canvasFirma.height);
       firmaInput.value = "";
+      previewFirma.style.display = 'none';
     });
 
-    // ENVÍO DEL FORMULARIO
+    // === ENVÍO ===
     form.addEventListener('submit', e => {
       e.preventDefault();
+
+      // Si aún no se ha generado la firma final, capturarla
+      if (!firmaInput.value) {
+        firmaInput.value = canvasFirma.toDataURL('image/png');
+      }
+
       fetch(scriptURL, { method: 'POST', body: new FormData(form) })
-        .then(response => {
+        .then(() => {
           alert("Formulario enviado correctamente");
           form.reset();
-          preview.style.display = 'none';
+          previewFoto.style.display = 'none';
+          previewFirma.style.display = 'none';
           ctxFirma.clearRect(0, 0, canvasFirma.width, canvasFirma.height);
         })
         .catch(error => {
