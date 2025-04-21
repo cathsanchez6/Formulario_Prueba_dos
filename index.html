@@ -69,23 +69,32 @@
   const preview = document.getElementById('preview');
 
   // Acceder a la cámara
-  navigator.mediaDevices.getUserMedia({ video: true })
-    .then(stream => {
-      video.srcObject = stream;
-    })
-    .catch(err => {
-      console.error("Error al acceder a la cámara: ", err);
-    });
+  navigator.mediaDevices.getUserMedia({
+  video: { facingMode: 'environment' }
+})
+.then(stream => {
+  video.srcObject = stream;
+})
+.catch(err => {
+  console.error("Error al acceder a la cámara: ", err);
+  alert("No se pudo acceder a la cámara. Asegúrate de dar permisos.");
+});
 
   // Capturar imagen desde video
   capturarBtn.addEventListener('click', () => {
-    canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
-    const imageData = canvas.toDataURL('image/png');
-    fotoInput.value = imageData;
-    preview.src = imageData;
-    preview.style.display = 'block';
-  });
+  canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+  const imageData = canvas.toDataURL('image/png');
+  fotoInput.value = imageData;
+  preview.src = imageData;
+  preview.style.display = 'block';
 
+  // ✅ Detener la cámara después de capturar
+  const stream = video.srcObject;
+  const tracks = stream.getTracks();
+  tracks.forEach(track => track.stop());
+  video.srcObject = null;
+});
+  
   // Enviar el formulario
   form.addEventListener('submit', e => {
     e.preventDefault();
