@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Formulario de contacto</title>
   <style>
     body {
@@ -11,29 +11,45 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 100vh;
+      min-height: 100vh;
+      margin: 0;
     }
     .formulario {
       background: white;
       padding: 20px;
       border-radius: 10px;
-      width: 300px;
+      width: 100%;
+      max-width: 400px;
       box-shadow: 0 0 10px rgba(0,0,0,0.2);
     }
-    input {
+    input, canvas, button {
       width: 100%;
       margin-bottom: 10px;
-      padding: 10px;
       font-size: 16px;
     }
-    button {
-      width: 100%;
+    input, button {
       padding: 10px;
+    }
+    canvas {
+      border: 1px solid #ccc;
+      touch-action: none;
+    }
+    video, img {
+      width: 100%;
+      margin-bottom: 10px;
+    }
+    .btn-secundario {
+      background-color: #ccc;
+      color: black;
+      border: none;
+      padding: 10px;
+      cursor: pointer;
+    }
+    button {
+      border: none;
       background-color: green;
       color: white;
-      border: none;
       cursor: pointer;
-      font-size: 16px;
       border-radius: 5px;
     }
   </style>
@@ -42,74 +58,114 @@
   <div class="formulario">
     <h2>Formulario de contacto</h2>
     <form id="formulario">
-      <input type="text" name="nombre" placeholder="Nombre" required>
-      <input type="email" name="correo" placeholder="Correo" required>
-      <input type="tel" name="telefono" placeholder="Teléfono" required>
+      <input type="text" name="nombre" placeholder="Nombre" required />
+      <input type="email" name="correo" placeholder="Correo" required />
+      <input type="tel" name="telefono" placeholder="Teléfono" required />
 
-      <div>
-        <label for="foto">Foto:</label><br>
-        <video id="video" width="300" height="200" autoplay></video><br>
-        <button type="button" id="capturar">Capturar Foto</button><br>
-        <canvas id="canvas" width="300" height="200" style="display:none;"></canvas>
-        <input type="hidden" name="foto" id="foto">
-        <img id="preview" style="max-width:100%; display:none;" />
-      </div>
+      <label>Foto:</label>
+      <video id="video" autoplay playsinline></video>
+      <button type="button" class="btn-secundario" id="capturar">Capturar Foto</button>
+      <canvas id="canvas" width="300" height="200" style="display:none;"></canvas>
+      <input type="hidden" name="foto" id="foto" />
+      <img id="preview" style="display:none;" />
+
+      <label>Firma digital:</label>
+      <canvas id="canvasFirma" width="300" height="150"></canvas>
+      <button type="button" class="btn-secundario" id="borrarFirma">Borrar Firma</button>
+      <input type="hidden" name="firma" id="firma" />
 
       <button type="submit">Enviar</button>
     </form>
   </div>
-<script>
-  const scriptURL = 'https://script.google.com/macros/s/AKfycbwGgCytrX0cn3uWDCbO2OIyKQ9dmQkthgSsz6D9n2NbY4Zv4MPKmmWuugefx-ra2NUw/exec';
-  const form = document.getElementById('formulario');
 
-  const video = document.getElementById('video');
-  const canvas = document.getElementById('canvas');
-  const capturarBtn = document.getElementById('capturar');
-  const fotoInput = document.getElementById('foto');
-  const preview = document.getElementById('preview');
+  <script>
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbwGgCytrX0cn3uWDCbO2OIyKQ9dmQkthgSsz6D9n2NbY4Zv4MPKmmWuugefx-ra2NUw/exec';
+    const form = document.getElementById('formulario');
 
-  // Acceder a la cámara
-  navigator.mediaDevices.getUserMedia({
-  video: { facingMode: 'environment' }
-})
-.then(stream => {
-  video.srcObject = stream;
-})
-.catch(err => {
-  console.error("Error al acceder a la cámara: ", err);
-  alert("No se pudo acceder a la cámara. Asegúrate de dar permisos.");
-});
+    // CÁMARA
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const capturarBtn = document.getElementById('capturar');
+    const fotoInput = document.getElementById('foto');
+    const preview = document.getElementById('preview');
 
-  // Capturar imagen desde video
-  capturarBtn.addEventListener('click', () => {
-  canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
-  const imageData = canvas.toDataURL('image/png');
-  fotoInput.value = imageData;
-  preview.src = imageData;
-  preview.style.display = 'block';
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => video.srcObject = stream)
+      .catch(err => console.error("Error al acceder a la cámara:", err));
 
-  // ✅ Detener la cámara después de capturar
-  const stream = video.srcObject;
-  const tracks = stream.getTracks();
-  tracks.forEach(track => track.stop());
-  video.srcObject = null;
-});
-  
-  // Enviar el formulario
-  form.addEventListener('submit', e => {
-    e.preventDefault();
-    fetch(scriptURL, { method: 'POST', body: new FormData(form) })
-      .then(response => {
-        alert("Enviado exitosamente.");
-        form.reset();
-        preview.style.display = 'none';
-      })
-      .catch(error => {
-        alert("Error al enviar.");
-        console.error('Error!', error.message);
-      });
-  });
-</script>
+    capturarBtn.addEventListener('click', () => {
+      canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+      const imageData = canvas.toDataURL('image/png');
+      fotoInput.value = imageData;
+      preview.src = imageData;
+      preview.style.display = 'block';
+    });
 
+    // FIRMA DIGITAL
+    const canvasFirma = document.getElementById('canvasFirma');
+    const borrarFirma = document.getElementById('borrarFirma');
+    const firmaInput = document.getElementById('firma');
+    const ctxFirma = canvasFirma.getContext('2d');
+
+    let dibujando = false;
+
+    const getPos = (e) => {
+      const rect = canvasFirma.getBoundingClientRect();
+      return {
+        x: (e.touches ? e.touches[0].clientX : e.clientX) - rect.left,
+        y: (e.touches ? e.touches[0].clientY : e.clientY) - rect.top
+      };
+    };
+
+    const empezarDibujo = (e) => {
+      e.preventDefault();
+      dibujando = true;
+      const pos = getPos(e);
+      ctxFirma.beginPath();
+      ctxFirma.moveTo(pos.x, pos.y);
+    };
+
+    const dibujar = (e) => {
+      if (!dibujando) return;
+      e.preventDefault();
+      const pos = getPos(e);
+      ctxFirma.lineTo(pos.x, pos.y);
+      ctxFirma.stroke();
+    };
+
+    const terminarDibujo = () => {
+      dibujando = false;
+      firmaInput.value = canvasFirma.toDataURL('image/png');
+    };
+
+    canvasFirma.addEventListener('mousedown', empezarDibujo);
+    canvasFirma.addEventListener('mousemove', dibujar);
+    canvasFirma.addEventListener('mouseup', terminarDibujo);
+    canvasFirma.addEventListener('mouseleave', terminarDibujo);
+    canvasFirma.addEventListener('touchstart', empezarDibujo);
+    canvasFirma.addEventListener('touchmove', dibujar);
+    canvasFirma.addEventListener('touchend', terminarDibujo);
+
+    borrarFirma.addEventListener('click', () => {
+      ctxFirma.clearRect(0, 0, canvasFirma.width, canvasFirma.height);
+      firmaInput.value = "";
+    });
+
+    // ENVÍO DEL FORMULARIO
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      fetch(scriptURL, { method: 'POST', body: new FormData(form) })
+        .then(response => {
+          alert("Formulario enviado correctamente");
+          form.reset();
+          preview.style.display = 'none';
+          ctxFirma.clearRect(0, 0, canvasFirma.width, canvasFirma.height);
+        })
+        .catch(error => {
+          alert("Error al enviar.");
+          console.error('Error!', error.message);
+        });
+    });
+  </script>
 </body>
 </html>
