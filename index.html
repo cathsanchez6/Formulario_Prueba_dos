@@ -76,7 +76,7 @@
   </div>
 
   <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbwQz1vDj-k6qOKW47p64XEeHuHgGYqM5VgkSEpea0TIFKWtlGD90u2dC2SiOK0Ybz_R/exec';
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbx9VMF5gzZvH6SfJc5nv2YlXEa1PKNGv1qI65TE2s5ra5LNs5crorFgfm_OeGQ0qlKA/exec';
     const form = document.getElementById('formulario');
 
     // === FOTO ===
@@ -87,14 +87,27 @@
     const preview = document.getElementById('preview');
     let stream;
 
-    navigator.mediaDevices.getUserMedia({ video: true })
-      .then(mediaStream => {
-        stream = mediaStream;
-        video.srcObject = stream;
-      })
-      .catch(err => {
-        console.error("Error al acceder a la cámara: ", err);
-      });
+    // Solicita la cámara trasera si está disponible
+navigator.mediaDevices.getUserMedia({
+  video: { facingMode: { exact: "environment" } }
+})
+.then(mediaStream => {
+  stream = mediaStream;
+  video.srcObject = stream;
+})
+.catch(err => {
+  console.warn("No se pudo acceder a la cámara trasera. Usando la predeterminada.", err);
+  // Si falla, usa la cámara predeterminada
+  navigator.mediaDevices.getUserMedia({ video: true })
+    .then(mediaStream => {
+      stream = mediaStream;
+      video.srcObject = stream;
+    })
+    .catch(error => {
+      console.error("Error al acceder a la cámara: ", error);
+    });
+});
+
 
     capturarBtn.addEventListener('click', () => {
       canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
