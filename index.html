@@ -76,7 +76,7 @@
   </div>
 
   <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbzNQTeql2bTcvDWBGi2wQEdTT_E--llb3LjCOhixx9OLL9qgDaW1S53VCiDoPowh0C3/exec';
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbxj_xsJ0VyuVEg_Wuf_gOuBKScfI6sFw29AFbt0bHdy4R5o6uIKXpiCHKlmHgxpF1yJ/exec';
     const form = document.getElementById('formulario');
 
     // === FOTO ===
@@ -187,12 +187,24 @@
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: params
       })
-      .then(response => {
-        alert("Enviado exitosamente.");
+      .then(response => response.text())
+      .then(url => {
+        alert("Enviado exitosamente. El PDF se descargará en breve.");
+        // Descargar automáticamente el PDF
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'formulario.pdf';
+        link.target = '_blank';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      
+        // Resetear formulario
         form.reset();
         preview.style.display = 'none';
         ctx.clearRect(0, 0, canvasFirma.width, canvasFirma.height);
       })
+
       .catch(error => {
         alert("Error al enviar.");
         console.error('Error!', error.message);
