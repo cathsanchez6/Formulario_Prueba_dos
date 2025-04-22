@@ -59,7 +59,7 @@
 
       <!-- Cámara -->
       <label>Foto:</label>
-      <video id="video" autoplay></video>
+      <video id="video" autoplay playsinline></video>
       <button type="button" id="capturar">Capturar Foto</button>
       <canvas id="canvas" width="300" height="200" style="display:none;"></canvas>
       <input type="hidden" name="foto" id="foto" />
@@ -102,12 +102,12 @@
       fotoInput.value = imageData;
       preview.src = imageData;
       preview.style.display = 'block';
+      video.style.display = 'none';
 
-      // Detener cámara
+      // Detener la cámara
       if (stream) {
         stream.getTracks().forEach(track => track.stop());
       }
-      video.style.display = 'none';
     });
 
     // === FIRMA ===
@@ -117,23 +117,42 @@
     const ctx = canvasFirma.getContext('2d');
     let dibujando = false;
 
-    canvasFirma.addEventListener('mousedown', e => {
+    function empezarDibujo(x, y) {
       dibujando = true;
       ctx.beginPath();
-      ctx.moveTo(e.offsetX, e.offsetY);
-    });
+      ctx.moveTo(x, y);
+    }
 
-    canvasFirma.addEventListener('mousemove', e => {
-      if (dibujando) {
-        ctx.lineTo(e.offsetX, e.offsetY);
-        ctx.stroke();
-      }
-    });
+    function dibujarLinea(x, y) {
+      if (!dibujando) return;
+      ctx.lineTo(x, y);
+      ctx.stroke();
+    }
 
-    canvasFirma.addEventListener('mouseup', () => {
+    function detenerDibujo() {
       dibujando = false;
       firmaInput.value = canvasFirma.toDataURL('image/png');
+    }
+
+    // Eventos para mouse
+    canvasFirma.addEventListener('mousedown', e => empezarDibujo(e.offsetX, e.offsetY));
+    canvasFirma.addEventListener('mousemove', e => dibujarLinea(e.offsetX, e.offsetY));
+    canvasFirma.addEventListener('mouseup', detenerDibujo);
+    canvasFirma.addEventListener('mouseleave', detenerDibujo);
+
+    // Eventos para touch
+    canvasFirma.addEventListener('touchstart', e => {
+      const rect = canvasFirma.getBoundingClientRect();
+      const touch = e.touches[0];
+      empezarDibujo(touch.clientX - rect.left, touch.clientY - rect.top);
     });
+    canvasFirma.addEventListener('touchmove', e => {
+      const rect = canvasFirma.getBoundingClientRect();
+      const touch = e.touches[0];
+      dibujarLinea(touch.clientX - rect.left, touch.clientY - rect.top);
+      e.preventDefault();
+    });
+    canvasFirma.addEventListener('touchend', detenerDibujo);
 
     limpiarBtn.addEventListener('click', () => {
       ctx.clearRect(0, 0, canvasFirma.width, canvasFirma.height);
@@ -144,7 +163,7 @@
     form.addEventListener('submit', e => {
       e.preventDefault();
 
-      // Asegurar que la firma esté guardada
+      // Captura firma final si no se ha soltado el mouse
       if (!firmaInput.value) {
         firmaInput.value = canvasFirma.toDataURL('image/png');
       }
