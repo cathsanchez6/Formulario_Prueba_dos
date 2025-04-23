@@ -14,32 +14,20 @@
       min-height: 100vh;
       padding: 20px;
     }
-    .formulario {
+    .formulario, .mensaje-exito {
       background: white;
-      justify-content: center;
-      align-items: center;
       padding: 30px;
       border-radius: 10px;
       max-width: 400px;
       width: 100%;
       box-shadow: 0 0 20px rgba(239, 239, 239);
+      text-align: center;
     }
-    input, canvas {
+    input, canvas, button {
       width: 100%;
       margin-bottom: 10px;
       padding: 10px;
       font-size: 16px;
-    }
-    button {
-      width: 100%;
-      padding: 10px;
-      background-color: rgb(52,130, 0);
-      color: white;
-      border: none;
-      cursor: pointer;
-      font-size: 16px;
-      border-radius: 5px;
-      margin-top: 10px;
     }
     #preview {
       max-width: 100%;
@@ -52,13 +40,13 @@
   </style>
 </head>
 <body>
-  <div class="formulario">
+  <div class="formulario" id="formulario-container">
     <h2><b>Prueba de Entrega</b></h2>
     <form id="formulario">
       <input type="text" name="nombre" placeholder="Nombre" required />
       <input type="email" name="correo" placeholder="Correo" required />
       <input type="tel" name="telefono" placeholder="Teléfono" required />
-
+      
       <label><b>Foto:</b></label>
       <video id="video" autoplay playsinline></video>
       <button type="button" id="capturar">Capturar Foto</button>
@@ -75,10 +63,17 @@
     </form>
   </div>
 
+  <div class="mensaje-exito" id="exito" style="display:none;">
+    <h3>Formulario enviado correctamente.</h3>
+    <p>Tu archivo PDF debería comenzar a descargarse automáticamente.</p>
+    <button onclick="volverAlFormulario()">Volver al formulario</button>
+  </div>
+
   <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbx5holvq9TT0Olw9sYcHEMq0VNcLhAlwOAM8lWgPuTXrTt719yUv-clqowlnAmAtA9L/exec';
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbzOb9CgxkAic_F7cPpfLC_fLz0Ova0peOvjb_lXDYWNvJCiBItDf_0VCRw8bQhYVS9_/exec';
     const form = document.getElementById('formulario');
 
+    // Cámara
     const video = document.getElementById('video');
     const canvas = document.getElementById('canvas');
     const capturarBtn = document.getElementById('capturar');
@@ -86,19 +81,11 @@
     const preview = document.getElementById('preview');
     let stream;
 
-    // Cámara
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: { exact: "environment" } } })
+    navigator.mediaDevices.getUserMedia({ video: true })
       .then(mediaStream => {
         stream = mediaStream;
         video.srcObject = stream;
-      }).catch(() => {
-        navigator.mediaDevices.getUserMedia({ video: true }).then(mediaStream => {
-          stream = mediaStream;
-          video.srcObject = stream;
-        }).catch(err => {
-          console.error("No se pudo acceder a la cámara", err);
-        });
-      });
+      }).catch(console.error);
 
     capturarBtn.addEventListener('click', () => {
       canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
@@ -138,6 +125,7 @@
     canvasFirma.addEventListener('mousemove', e => dibujarLinea(e.offsetX, e.offsetY));
     canvasFirma.addEventListener('mouseup', detenerDibujo);
     canvasFirma.addEventListener('mouseleave', detenerDibujo);
+
     canvasFirma.addEventListener('touchstart', e => {
       const rect = canvasFirma.getBoundingClientRect();
       const touch = e.touches[0];
@@ -156,33 +144,48 @@
       firmaInput.value = "";
     });
 
-    // Enviar formulario y abrir PDF
-    form.addEventListener('submit', async e => {
+    // Enviar formulario
+    form.addEventListener('submit', e => {
       e.preventDefault();
 
       if (!firmaInput.value) {
         firmaInput.value = canvasFirma.toDataURL('image/png');
       }
 
-      try {
-        const respuesta = await fetch(scriptURL, {
-          method: 'POST',
-          body: new FormData(form)
-        });
+      fetch(scriptURL, {
+        method: 'POST',
+        body: new FormData(form)
+      })
+      .then(response => response.text())
+      .then(pdfUrl => {
+        document.getElementById('formulario-container').style.display = 'none';
+        document.getElementById('exito').style.display = 'block';
 
-        const pdfUrl = await respuesta.text();
-
-        window.open(pdfUrl, '_blank');
-
-        document.querySelector(".formulario").innerHTML = `
-          <h2>✅ ¡Formulario enviado con éxito!</h2>
-          <p><a href="${pdfUrl}" target="_blank">Haz clic aquí para ver el PDF generado</a></p>
-        `;
-      } catch (err) {
-        alert("❌ Error al enviar el formulario.");
+        // Descargar el PDF automáticamente
+        const link = document.createElement('a');
+        link.href = pdfUrl;
+        link.download = 'formulario.pdf';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      })
+      .catch(err => {
+        alert("Error al enviar el formulario.");
         console.error(err);
-      }
+      });
     });
+
+    function volverAlFormulario() {
+      document.getElementById('exito').style.display = 'none';
+      document.getElementById('formulario-container').style.display = 'block';
+      form.reset();
+      preview.style.display = 'none';
+      video.style.display = 'block';
+      ctx.clearRect(0, 0, canvasFirma.width, canvasFirma.height);
+      navigator.mediaDevices.getUserMedia({ video: true }).then(mediaStream => {
+        video.srcObject = mediaStream;
+      });
+    }
   </script>
 </body>
 </html>
