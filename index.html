@@ -31,7 +31,7 @@
     button {
       width: 100%;
       padding: 10px;
-      background-color: rgb(0, 131, 63);
+      background-color: rgb(52,130, 0);
       color: white;
       border: none;
       cursor: pointer;
@@ -51,7 +51,7 @@
 </head>
 <body>
   <div class="formulario">
-    <h2><b><aling-items:center>Prueba de Entrega</aling-items:center></b></h2>
+    <h2><b>Prueba de Entrega</b></h2>
     <form id="formulario">
       <input type="text" name="nombre" placeholder="Nombre" required />
       <input type="email" name="correo" placeholder="Correo" required />
@@ -60,6 +60,7 @@
      <br>
       <!-- Cámara -->
       <label><b>Foto:</b></label>
+     <br>
       <video id="video" autoplay playsinline></video>
       <button type="button" id="capturar">Capturar Foto</button>
       <canvas id="canvas" width="300" height="200" style="display:none;"></canvas>
@@ -69,6 +70,7 @@
      <br>
       <!-- Firma -->
       <label><b>Firma:</b></label>
+       <br>
       <canvas id="canvasFirma" width="300" height="150" style="border:1px solid #000;"></canvas>
       <input type="hidden" name="firma" id="firma" />
       <button type="button" id="limpiarFirma">Limpiar Firma</button>
