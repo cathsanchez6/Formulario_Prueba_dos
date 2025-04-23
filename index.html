@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
@@ -58,21 +58,15 @@
       <input type="text" name="nombre" placeholder="Nombre" required />
       <input type="email" name="correo" placeholder="Correo" required />
       <input type="tel" name="telefono" placeholder="Teléfono" required />
-     <br>
-     <br>
-      <!-- Cámara -->
+
       <label><b>Foto:</b></label>
-     <br>
       <video id="video" autoplay playsinline></video>
       <button type="button" id="capturar">Capturar Foto</button>
       <canvas id="canvas" width="300" height="200" style="display:none;"></canvas>
       <input type="hidden" name="foto" id="foto" />
       <img id="preview" style="display:none;" />
 
-     <br>
-      <!-- Firma -->
       <label><b>Firma:</b></label>
-       <br>
       <canvas id="canvasFirma" width="300" height="150" style="border:1px solid #000;"></canvas>
       <input type="hidden" name="firma" id="firma" />
       <button type="button" id="limpiarFirma">Limpiar Firma</button>
@@ -82,10 +76,9 @@
   </div>
 
   <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbxB9_AjWaITHpXr500iGiZ8TIcQ_tO8YSnDYf0HL33vC3HRWh73xd6F6tsUVr9N9huv/exec';
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbx5holvq9TT0Olw9sYcHEMq0VNcLhAlwOAM8lWgPuTXrTt719yUv-clqowlnAmAtA9L/exec';
     const form = document.getElementById('formulario');
 
-    // === FOTO ===
     const video = document.getElementById('video');
     const canvas = document.getElementById('canvas');
     const capturarBtn = document.getElementById('capturar');
@@ -93,20 +86,19 @@
     const preview = document.getElementById('preview');
     let stream;
 
-    navigator.mediaDevices.getUserMedia({
-      video: { facingMode: { exact: "environment" } }
-    }).then(mediaStream => {
-      stream = mediaStream;
-      video.srcObject = stream;
-    }).catch(() => {
-      // fallback a la cámara predeterminada
-      navigator.mediaDevices.getUserMedia({ video: true }).then(mediaStream => {
+    // Cámara
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: { exact: "environment" } } })
+      .then(mediaStream => {
         stream = mediaStream;
         video.srcObject = stream;
-      }).catch(err => {
-        console.error("No se pudo acceder a la cámara", err);
+      }).catch(() => {
+        navigator.mediaDevices.getUserMedia({ video: true }).then(mediaStream => {
+          stream = mediaStream;
+          video.srcObject = stream;
+        }).catch(err => {
+          console.error("No se pudo acceder a la cámara", err);
+        });
       });
-    });
 
     capturarBtn.addEventListener('click', () => {
       canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
@@ -118,7 +110,7 @@
       if (stream) stream.getTracks().forEach(track => track.stop());
     });
 
-    // === FIRMA ===
+    // Firma
     const canvasFirma = document.getElementById('canvasFirma');
     const firmaInput = document.getElementById('firma');
     const limpiarBtn = document.getElementById('limpiarFirma');
@@ -146,7 +138,6 @@
     canvasFirma.addEventListener('mousemove', e => dibujarLinea(e.offsetX, e.offsetY));
     canvasFirma.addEventListener('mouseup', detenerDibujo);
     canvasFirma.addEventListener('mouseleave', detenerDibujo);
-
     canvasFirma.addEventListener('touchstart', e => {
       const rect = canvasFirma.getBoundingClientRect();
       const touch = e.touches[0];
@@ -165,29 +156,32 @@
       firmaInput.value = "";
     });
 
-    // === ENVIAR FORMULARIO ===
-    form.addEventListener('submit', e => {
+    // Enviar formulario y abrir PDF
+    form.addEventListener('submit', async e => {
       e.preventDefault();
 
-      // Capturar firma antes de enviar
       if (!firmaInput.value) {
         firmaInput.value = canvasFirma.toDataURL('image/png');
       }
 
-      fetch(scriptURL, {
-        method: 'POST',
-        body: new FormData(form)
-      })
-      .then(() => {
-        alert("Formulario enviado correctamente.");
-        form.reset();
-        preview.style.display = 'none';
-        ctx.clearRect(0, 0, canvasFirma.width, canvasFirma.height);
-      })
-      .catch(err => {
-        alert("Error al enviar el formulario.");
+      try {
+        const respuesta = await fetch(scriptURL, {
+          method: 'POST',
+          body: new FormData(form)
+        });
+
+        const pdfUrl = await respuesta.text();
+
+        window.open(pdfUrl, '_blank');
+
+        document.querySelector(".formulario").innerHTML = `
+          <h2>✅ ¡Formulario enviado con éxito!</h2>
+          <p><a href="${pdfUrl}" target="_blank">Haz clic aquí para ver el PDF generado</a></p>
+        `;
+      } catch (err) {
+        alert("❌ Error al enviar el formulario.");
         console.error(err);
-      });
+      }
     });
   </script>
 </body>
