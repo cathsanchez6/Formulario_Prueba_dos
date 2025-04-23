@@ -73,13 +73,12 @@
 
       <button type="submit">Enviar</button>
     </form>
+    <div id="respuesta" style="margin-top: 15px; text-align:center;"></div>
   </div>
 
   <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbxbZLkvByYZA-bL6W15GL5h_cOP-UBHKpz9_S1WuDebH0J26faxull99HI0KcHhSgaT/exec';
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbzRWUB4Ig2K-CPC6VNkFLxn7F91ov8fbzfOhzZHni2jiO0lW4w_6cZdpn8n2qSbwLjX/exec';
     const form = document.getElementById('formulario');
-
-    // === FOTO ===
     const video = document.getElementById('video');
     const canvas = document.getElementById('canvas');
     const capturarBtn = document.getElementById('capturar');
@@ -93,7 +92,6 @@
       stream = mediaStream;
       video.srcObject = stream;
     }).catch(() => {
-      // fallback a la cámara predeterminada
       navigator.mediaDevices.getUserMedia({ video: true }).then(mediaStream => {
         stream = mediaStream;
         video.srcObject = stream;
@@ -112,7 +110,6 @@
       if (stream) stream.getTracks().forEach(track => track.stop());
     });
 
-    // === FIRMA ===
     const canvasFirma = document.getElementById('canvasFirma');
     const firmaInput = document.getElementById('firma');
     const limpiarBtn = document.getElementById('limpiarFirma');
@@ -124,13 +121,11 @@
       ctx.beginPath();
       ctx.moveTo(x, y);
     }
-
     function dibujarLinea(x, y) {
       if (!dibujando) return;
       ctx.lineTo(x, y);
       ctx.stroke();
     }
-
     function detenerDibujo() {
       dibujando = false;
       firmaInput.value = canvasFirma.toDataURL('image/png');
@@ -140,7 +135,6 @@
     canvasFirma.addEventListener('mousemove', e => dibujarLinea(e.offsetX, e.offsetY));
     canvasFirma.addEventListener('mouseup', detenerDibujo);
     canvasFirma.addEventListener('mouseleave', detenerDibujo);
-
     canvasFirma.addEventListener('touchstart', e => {
       const rect = canvasFirma.getBoundingClientRect();
       const touch = e.touches[0];
@@ -159,11 +153,8 @@
       firmaInput.value = "";
     });
 
-    // === ENVIAR FORMULARIO ===
     form.addEventListener('submit', e => {
       e.preventDefault();
-
-      // Capturar firma antes de enviar
       if (!firmaInput.value) {
         firmaInput.value = canvasFirma.toDataURL('image/png');
       }
@@ -172,8 +163,11 @@
         method: 'POST',
         body: new FormData(form)
       })
-      .then(() => {
-        alert("Formulario enviado correctamente.");
+      .then(response => response.text())
+      .then(pdfUrl => {
+        document.getElementById('respuesta').innerHTML = `
+          <p>Formulario enviado correctamente.</p>
+          <p><a href="${pdfUrl}" target="_blank">Ver PDF generado</a></p>`;
         form.reset();
         preview.style.display = 'none';
         ctx.clearRect(0, 0, canvasFirma.width, canvasFirma.height);
