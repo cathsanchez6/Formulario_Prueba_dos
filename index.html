@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Formulario Prueba de entrega</title>
+  <title>Formulario Prueba de Entrega</title>
   <style>
     body {
       font-family: roboto, sans-serif;
@@ -31,7 +31,7 @@
     button {
       width: 100%;
       padding: 10px;
-      background-color: rgb(52,130,0);
+      background-color: rgb(52,130, 0);
       color: white;
       border: none;
       cursor: pointer;
@@ -47,14 +47,10 @@
       width: 100%;
       height: auto;
     }
-    #exito {
-      display: none;
-      text-align: center;
-    }
   </style>
 </head>
 <body>
-  <div class="formulario" id="formulario-container">
+  <div class="formulario">
     <h2><b>Prueba de Entrega</b></h2>
     <form id="formulario">
       <input type="text" name="nombre" placeholder="Nombre" required />
@@ -77,14 +73,8 @@
     </form>
   </div>
 
-  <div class="formulario" id="exito">
-    <h3>¡Formulario enviado!</h3>
-    <p>Tu PDF fue descargado automáticamente.</p>
-    <button onclick="volverAlFormulario()">Volver al formulario</button>
-  </div>
-
   <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbzOb9CgxkAic_F7cPpfLC_fLz0Ova0peOvjb_lXDYWNvJCiBItDf_0VCRw8bQhYVS9_/exec';
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbyXG3f2iCz7php7fmm-hjqgqQ493LD72lk35QDBiDX22_wPnI_CcfJqiQc1DDBZdVVt/exec';
     const form = document.getElementById('formulario');
 
     const video = document.getElementById('video');
@@ -94,24 +84,21 @@
     const preview = document.getElementById('preview');
     let stream;
 
+    // === Activar cámara trasera por defecto ===
     function iniciarCamara() {
-      navigator.mediaDevices.getUserMedia({ video: { facingMode: { exact: "environment" } } })
-        .then(mediaStream => {
+      navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { exact: "environment" } }
+      }).then(mediaStream => {
+        stream = mediaStream;
+        video.srcObject = stream;
+      }).catch(() => {
+        navigator.mediaDevices.getUserMedia({ video: true }).then(mediaStream => {
           stream = mediaStream;
           video.srcObject = stream;
-          video.style.display = 'block';
-        })
-        .catch(() => {
-          navigator.mediaDevices.getUserMedia({ video: true })
-            .then(mediaStream => {
-              stream = mediaStream;
-              video.srcObject = stream;
-              video.style.display = 'block';
-            })
-            .catch(err => {
-              console.error("No se pudo acceder a la cámara", err);
-            });
+        }).catch(err => {
+          console.error("No se pudo acceder a la cámara", err);
         });
+      });
     }
 
     iniciarCamara();
@@ -126,7 +113,7 @@
       if (stream) stream.getTracks().forEach(track => track.stop());
     });
 
-    // Firma
+    // === Firma ===
     const canvasFirma = document.getElementById('canvasFirma');
     const firmaInput = document.getElementById('firma');
     const limpiarBtn = document.getElementById('limpiarFirma');
@@ -154,6 +141,7 @@
     canvasFirma.addEventListener('mousemove', e => dibujarLinea(e.offsetX, e.offsetY));
     canvasFirma.addEventListener('mouseup', detenerDibujo);
     canvasFirma.addEventListener('mouseleave', detenerDibujo);
+
     canvasFirma.addEventListener('touchstart', e => {
       const rect = canvasFirma.getBoundingClientRect();
       const touch = e.touches[0];
@@ -172,6 +160,7 @@
       firmaInput.value = "";
     });
 
+    // === Enviar formulario ===
     form.addEventListener('submit', e => {
       e.preventDefault();
 
@@ -183,33 +172,30 @@
         method: 'POST',
         body: new FormData(form)
       })
-      .then(response => response.text())
-      .then(pdfUrl => {
-        document.getElementById('formulario-container').style.display = 'none';
-        document.getElementById('exito').style.display = 'block';
+      .then(res => res.text())
+      .then(url => {
+        // Forzar descarga del PDF
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'comprobante.pdf';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
 
-        const link = document.createElement('a');
-        link.href = pdfUrl;
-        link.download = 'formulario.pdf';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        // Limpiar formulario y recargar cámara trasera después de 3 segundos
+        setTimeout(() => {
+          form.reset();
+          preview.style.display = 'none';
+          ctx.clearRect(0, 0, canvasFirma.width, canvasFirma.height);
+          video.style.display = 'block';
+          iniciarCamara();
+        }, 3000);
       })
       .catch(err => {
         alert("Error al enviar el formulario.");
         console.error(err);
       });
     });
-
-    function volverAlFormulario() {
-      document.getElementById('exito').style.display = 'none';
-      document.getElementById('formulario-container').style.display = 'block';
-      form.reset();
-      preview.style.display = 'none';
-      canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
-      ctx.clearRect(0, 0, canvasFirma.width, canvasFirma.height);
-      iniciarCamara();
-    }
   </script>
 </body>
 </html>
