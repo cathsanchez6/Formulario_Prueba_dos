@@ -6,7 +6,7 @@
   <title>Formulario Prueba de entrega</title>
   <style>
     body {
-      font-family: roboto, product sans;
+      font-family: roboto, sans-serif;
       background-color: #f2f2f2;
       display: flex;
       justify-content: center;
@@ -14,20 +14,30 @@
       min-height: 100vh;
       padding: 20px;
     }
-    .formulario, .mensaje-exito {
+    .formulario {
       background: white;
       padding: 30px;
       border-radius: 10px;
       max-width: 400px;
       width: 100%;
-      box-shadow: 0 0 20px rgba(239, 239, 239);
-      text-align: center;
+      box-shadow: 0 0 20px rgba(0,0,0,0.1);
     }
-    input, canvas, button {
+    input, canvas {
       width: 100%;
       margin-bottom: 10px;
       padding: 10px;
       font-size: 16px;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      background-color: rgb(52,130,0);
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+      border-radius: 5px;
+      margin-top: 10px;
     }
     #preview {
       max-width: 100%;
@@ -36,6 +46,10 @@
     #video {
       width: 100%;
       height: auto;
+    }
+    #exito {
+      display: none;
+      text-align: center;
     }
   </style>
 </head>
@@ -46,7 +60,7 @@
       <input type="text" name="nombre" placeholder="Nombre" required />
       <input type="email" name="correo" placeholder="Correo" required />
       <input type="tel" name="telefono" placeholder="Teléfono" required />
-      
+
       <label><b>Foto:</b></label>
       <video id="video" autoplay playsinline></video>
       <button type="button" id="capturar">Capturar Foto</button>
@@ -63,9 +77,9 @@
     </form>
   </div>
 
-  <div class="mensaje-exito" id="exito" style="display:none;">
-    <h3>Formulario enviado correctamente.</h3>
-    <p>Tu archivo PDF debería comenzar a descargarse automáticamente.</p>
+  <div class="formulario" id="exito">
+    <h3>¡Formulario enviado!</h3>
+    <p>Tu PDF fue descargado automáticamente.</p>
     <button onclick="volverAlFormulario()">Volver al formulario</button>
   </div>
 
@@ -73,7 +87,6 @@
     const scriptURL = 'https://script.google.com/macros/s/AKfycbzOb9CgxkAic_F7cPpfLC_fLz0Ova0peOvjb_lXDYWNvJCiBItDf_0VCRw8bQhYVS9_/exec';
     const form = document.getElementById('formulario');
 
-    // Cámara
     const video = document.getElementById('video');
     const canvas = document.getElementById('canvas');
     const capturarBtn = document.getElementById('capturar');
@@ -81,11 +94,27 @@
     const preview = document.getElementById('preview');
     let stream;
 
-    navigator.mediaDevices.getUserMedia({ video: true })
-      .then(mediaStream => {
-        stream = mediaStream;
-        video.srcObject = stream;
-      }).catch(console.error);
+    function iniciarCamara() {
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: { exact: "environment" } } })
+        .then(mediaStream => {
+          stream = mediaStream;
+          video.srcObject = stream;
+          video.style.display = 'block';
+        })
+        .catch(() => {
+          navigator.mediaDevices.getUserMedia({ video: true })
+            .then(mediaStream => {
+              stream = mediaStream;
+              video.srcObject = stream;
+              video.style.display = 'block';
+            })
+            .catch(err => {
+              console.error("No se pudo acceder a la cámara", err);
+            });
+        });
+    }
+
+    iniciarCamara();
 
     capturarBtn.addEventListener('click', () => {
       canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
@@ -125,7 +154,6 @@
     canvasFirma.addEventListener('mousemove', e => dibujarLinea(e.offsetX, e.offsetY));
     canvasFirma.addEventListener('mouseup', detenerDibujo);
     canvasFirma.addEventListener('mouseleave', detenerDibujo);
-
     canvasFirma.addEventListener('touchstart', e => {
       const rect = canvasFirma.getBoundingClientRect();
       const touch = e.touches[0];
@@ -144,7 +172,6 @@
       firmaInput.value = "";
     });
 
-    // Enviar formulario
     form.addEventListener('submit', e => {
       e.preventDefault();
 
@@ -161,7 +188,6 @@
         document.getElementById('formulario-container').style.display = 'none';
         document.getElementById('exito').style.display = 'block';
 
-        // Descargar el PDF automáticamente
         const link = document.createElement('a');
         link.href = pdfUrl;
         link.download = 'formulario.pdf';
@@ -180,11 +206,9 @@
       document.getElementById('formulario-container').style.display = 'block';
       form.reset();
       preview.style.display = 'none';
-      video.style.display = 'block';
+      canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
       ctx.clearRect(0, 0, canvasFirma.width, canvasFirma.height);
-      navigator.mediaDevices.getUserMedia({ video: true }).then(mediaStream => {
-        video.srcObject = mediaStream;
-      });
+      iniciarCamara();
     }
   </script>
 </body>
