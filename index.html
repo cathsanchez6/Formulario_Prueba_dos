@@ -100,155 +100,166 @@
       <button type="submit" style="display:none;" id="btnEnviar">Confirmar y Enviar</button>
     </form>
   </div>
+<script>
+  const scriptURL = 'https://script.google.com/macros/s/AKfycbyqBF_SW2W1OzUIka-c7OHQRdmubmnT7azV-PIwDRQqWNcZxjrb7_8e_wyraC7v0uu1/exec';
+  const form = document.getElementById('formulario');
+  const video = document.getElementById('video');
+  const canvas = document.getElementById('canvas');
+  const capturarBtn = document.getElementById('capturar');
+  const fotoInput = document.getElementById('foto');
+  const preview = document.getElementById('preview');
+  const canvasFirma = document.getElementById('canvasFirma');
+  const firmaInput = document.getElementById('firma');
+  const limpiarBtn = document.getElementById('limpiarFirma');
+  const resumenDiv = document.getElementById('previewResumen');
+  const verResumenBtn = document.getElementById('verResumen');
+  const btnEnviar = document.getElementById('btnEnviar');
+  const folioInput = document.getElementById('folio');
+  const fechaHoraInput = document.getElementById('fechaHora');
+  let stream;
 
-  <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbzIuSfvYbq1OP4ZI9hG1rrLNWBJobEbBIHeJ6AWDcQQ2Y0AtPMmyK7nA68u8dEoSCoJ/exec'; //  URL Apps Script
-    const form = document.getElementById('formulario');
-    const video = document.getElementById('video');
-    const canvas = document.getElementById('canvas');
-    const capturarBtn = document.getElementById('capturar');
-    const fotoInput = document.getElementById('foto');
-    const preview = document.getElementById('preview');
-    const canvasFirma = document.getElementById('canvasFirma');
-    const firmaInput = document.getElementById('firma');
-    const limpiarBtn = document.getElementById('limpiarFirma');
-    const resumenDiv = document.getElementById('previewResumen');
-    const verResumenBtn = document.getElementById('verResumen');
-    const btnEnviar = document.getElementById('btnEnviar');
-    const folioInput = document.getElementById('folio');
-    const fechaHoraInput = document.getElementById('fechaHora');
-    let stream;
-
-    function iniciarCamara() {
-      navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { exact: "environment" } }
-      }).then(s => {
+  function iniciarCamara() {
+    navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { exact: "environment" } }
+    }).then(s => {
+      stream = s;
+      video.srcObject = stream;
+    }).catch(() => {
+      navigator.mediaDevices.getUserMedia({ video: true }).then(s => {
         stream = s;
         video.srcObject = stream;
-      }).catch(() => {
-        navigator.mediaDevices.getUserMedia({ video: true }).then(s => {
-          stream = s;
-          video.srcObject = stream;
-        });
       });
-    }
-
-    iniciarCamara();
-
-    capturarBtn.addEventListener('click', () => {
-      canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
-      const dataUrl = canvas.toDataURL('image/png');
-      fotoInput.value = dataUrl;
-      preview.src = dataUrl;
-      preview.style.display = 'block';
-      video.style.display = 'none';
-      if (stream) stream.getTracks().forEach(track => track.stop());
     });
+  }
 
-    const ctx = canvasFirma.getContext('2d');
-    let dibujando = false;
+  iniciarCamara();
 
-    function empezarDibujo(x, y) {
-      dibujando = true;
-      ctx.beginPath();
-      ctx.moveTo(x, y);
-    }
+  capturarBtn.addEventListener('click', () => {
+    canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+    const dataUrl = canvas.toDataURL('image/png');
+    fotoInput.value = dataUrl;
+    preview.src = dataUrl;
+    preview.style.display = 'block';
+    video.style.display = 'none';
+    if (stream) stream.getTracks().forEach(track => track.stop());
+  });
 
-    function dibujarLinea(x, y) {
-      if (!dibujando) return;
-      ctx.lineTo(x, y);
-      ctx.stroke();
-    }
+  const ctx = canvasFirma.getContext('2d');
+  ctx.lineWidth = 2;
+  ctx.lineJoin = "round";
+  ctx.lineCap = "round";
+  let dibujando = false;
 
-    function detenerDibujo() {
+  function empezarDibujo(x, y) {
+    dibujando = true;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+  }
+
+  function dibujarLinea(x, y) {
+    if (!dibujando) return;
+    ctx.lineTo(x, y);
+    ctx.stroke();
+  }
+
+  function detenerDibujo() {
+    if (dibujando) {
       dibujando = false;
       firmaInput.value = canvasFirma.toDataURL('image/png');
     }
+  }
 
-    canvasFirma.addEventListener('mousedown', e => empezarDibujo(e.offsetX, e.offsetY));
-    canvasFirma.addEventListener('mousemove', e => dibujarLinea(e.offsetX, e.offsetY));
-    canvasFirma.addEventListener('mouseup', detenerDibujo);
-    canvasFirma.addEventListener('mouseleave', detenerDibujo);
+  canvasFirma.addEventListener('mousedown', e => empezarDibujo(e.offsetX, e.offsetY));
+  canvasFirma.addEventListener('mousemove', e => dibujarLinea(e.offsetX, e.offsetY));
+  canvasFirma.addEventListener('mouseup', detenerDibujo);
+  canvasFirma.addEventListener('mouseleave', detenerDibujo);
 
-    canvasFirma.addEventListener('touchstart', e => {
-      const rect = canvasFirma.getBoundingClientRect();
-      const touch = e.touches[0];
-      empezarDibujo(touch.clientX - rect.left, touch.clientY - rect.top);
-    });
-    canvasFirma.addEventListener('touchmove', e => {
-      const rect = canvasFirma.getBoundingClientRect();
-      const touch = e.touches[0];
-      dibujarLinea(touch.clientX - rect.left, touch.clientY - rect.top);
-      e.preventDefault();
-    });
-    canvasFirma.addEventListener('touchend', detenerDibujo);
+  canvasFirma.addEventListener('touchstart', e => {
+    const rect = canvasFirma.getBoundingClientRect();
+    const touch = e.touches[0];
+    empezarDibujo(touch.clientX - rect.left, touch.clientY - rect.top);
+  });
+  canvasFirma.addEventListener('touchmove', e => {
+    const rect = canvasFirma.getBoundingClientRect();
+    const touch = e.touches[0];
+    dibujarLinea(touch.clientX - rect.left, touch.clientY - rect.top);
+    e.preventDefault();
+  });
+  canvasFirma.addEventListener('touchend', detenerDibujo);
 
-    limpiarBtn.addEventListener('click', () => {
-      ctx.clearRect(0, 0, canvasFirma.width, canvasFirma.height);
-      firmaInput.value = '';
-    });
+  limpiarBtn.addEventListener('click', () => {
+    ctx.clearRect(0, 0, canvasFirma.width, canvasFirma.height);
+    firmaInput.value = '';
+  });
 
-    verResumenBtn.addEventListener('click', () => {
-      const nombre = form.nombre.value;
-      const correo = form.correo.value;
-      const telefono = form.telefono.value;
-      const foto = fotoInput.value;
-      const firma = firmaInput.value;
+  verResumenBtn.addEventListener('click', () => {
+    const nombre = form.nombre.value.trim();
+    const correo = form.correo.value.trim();
+    const telefono = form.telefono.value.trim();
+    const foto = fotoInput.value;
+    const firma = firmaInput.value;
 
-      if (!foto || !firma || !nombre || !correo || !telefono) {
-        alert("Por favor completa todos los campos y captura la foto y firma.");
-        return;
+    if (!foto || !firma || !nombre || !correo || !telefono) {
+      alert("Por favor completa todos los campos y asegúrate de haber capturado foto y firma.");
+      return;
+    }
+
+    const ahora = new Date();
+    const fecha = ahora.toLocaleString();
+    const folio = 'FOLIO-' + Math.floor(Math.random() * 1000000);
+
+    fechaHoraInput.value = fecha;
+    folioInput.value = folio;
+
+    resumenDiv.innerHTML = `
+      <h3>Resumen de la entrega</h3>
+      <p><b>Folio:</b> ${folio}</p>
+      <p><b>Fecha:</b> ${fecha}</p>
+      <p><b>Nombre:</b> ${nombre}</p>
+      <p><b>Correo:</b> ${correo}</p>
+      <p><b>Teléfono:</b> ${telefono}</p>
+      <p><b>Foto:</b><br><img src="${foto}" /></p>
+      <p><b>Firma:</b><br><img src="${firma}" /></p>
+    `;
+
+    resumenDiv.style.display = 'block';
+    btnEnviar.style.display = 'block';
+    verResumenBtn.style.display = 'none';
+  });
+
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    btnEnviar.disabled = true;
+    btnEnviar.textContent = 'Enviando...';
+
+    fetch(scriptURL, {
+      method: 'POST',
+      body: new FormData(form)
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        const a = document.createElement('a');
+        a.href = data.pdfUrl;
+        a.download = 'Prueba_de_Entrega.pdf';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        alert("Formulario enviado correctamente.");
+        location.reload();
+      } else {
+        alert("Error al procesar el formulario.");
+        btnEnviar.disabled = false;
+        btnEnviar.textContent = 'Confirmar y Enviar';
       }
-
-      // Fecha actual
-      const ahora = new Date();
-      const fecha = ahora.toLocaleString();
-      const folio = 'FOLIO-' + Math.floor(Math.random() * 1000000);
-
-      fechaHoraInput.value = fecha;
-      folioInput.value = folio;
-
-      resumenDiv.innerHTML = `
-        <h3>Resumen de la entrega</h3>
-        <p><b>Folio:</b> ${folio}</p>
-        <p><b>Fecha:</b> ${fecha}</p>
-        <p><b>Nombre:</b> ${nombre}</p>
-        <p><b>Correo:</b> ${correo}</p>
-        <p><b>Teléfono:</b> ${telefono}</p>
-        <p><b>Foto:</b><br><img src="${foto}" /></p>
-        <p><b>Firma:</b><br><img src="${firma}" /></p>
-      `;
-
-      resumenDiv.style.display = 'block';
-      btnEnviar.style.display = 'block';
-      verResumenBtn.style.display = 'none';
+    })
+    .catch(err => {
+      console.error(err);
+      alert("Error al enviar.");
+      btnEnviar.disabled = false;
+      btnEnviar.textContent = 'Confirmar y Enviar';
     });
-
-    form.addEventListener('submit', e => {
-      e.preventDefault();
-
-      fetch(scriptURL, {
-        method: 'POST',
-        body: new FormData(form)
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          const a = document.createElement('a');
-          a.href = data.pdfUrl;
-          a.download = 'Prueba_de_Entrega.pdf';
-          a.click();
-          alert("Formulario enviado correctamente.");
-          location.reload();
-        } else {
-          alert("Error al procesar el formulario.");
-        }
-      })
-      .catch(err => {
-        console.error(err);
-        alert("Error al enviar.");
-      });
-    });
-  </script>
+  });
+</script>
 </body>
 </html>
