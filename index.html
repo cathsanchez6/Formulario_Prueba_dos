@@ -3,85 +3,107 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Formulario Prueba de entrega</title>
+  <title>Formulario Prueba de Entrega</title>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <style>
+    * { box-sizing: border-box; }
     body {
-      font-family: roboto, product sans;
-      background-color: #f2f2f2;
+      margin: 0;
+      font-family: 'Segoe UI', Roboto, sans-serif;
+      background: #f0f2f5;
       display: flex;
-      justify-content: center;
       align-items: center;
+      justify-content: center;
       min-height: 100vh;
       padding: 20px;
     }
     .formulario {
-      background: white;
+      background: #ffffff;
+      border-radius: 12px;
       padding: 30px;
-      border-radius: 10px;
-      max-width: 400px;
       width: 100%;
-      box-shadow: 0 0 20px rgba(239, 239, 239);
+      max-width: 450px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
     }
-    input, canvas {
+    h2 {
+      margin-bottom: 20px;
+      text-align: center;
+      color: #333;
+    }
+    input, button, canvas {
       width: 100%;
-      margin-bottom: 10px;
-      padding: 10px;
+      margin-bottom: 15px;
+      padding: 12px;
       font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+    input:focus, canvas:focus { border-color: #348200; outline: none; }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+      color: #333;
     }
     button {
-      width: 100%;
-      padding: 10px;
-      background-color: rgb(52,130, 0);
+      background-color: #348200;
       color: white;
       border: none;
       cursor: pointer;
-      font-size: 16px;
-      border-radius: 5px;
-      margin-top: 10px;
+      font-weight: bold;
+      transition: background-color 0.3s;
+    }
+    button:hover { background-color: #2a6800; }
+    .small-button {
+      background-color: #888;
+      margin-top: -10px;
+      margin-bottom: 15px;
     }
     #preview {
       max-width: 100%;
+      display: block;
       margin-top: 10px;
+      border-radius: 8px;
     }
-    #video {
+    video {
       width: 100%;
-      height: auto;
+      border-radius: 8px;
+      margin-bottom: 10px;
     }
   </style>
 </head>
 <body>
   <div class="formulario">
-    <h2><b>Prueba de Entrega</b></h2>
+    <h2>📦 Prueba de Entrega</h2>
     <form id="formulario">
-      <input type="text" name="nombre" placeholder="Nombre" required />
-      <input type="email" name="correo" placeholder="Correo" required />
+      <label>Nombre</label>
+      <input type="text" name="nombre" placeholder="Nombre completo" required />
+      
+      <label>Correo</label>
+      <input type="email" name="correo" placeholder="Correo electrónico" required />
+      
+      <label>Teléfono</label>
       <input type="tel" name="telefono" placeholder="Teléfono" required />
-     <br><br>
 
-      <!-- Cámara -->
-      <label><b>Foto:</b></label><br>
+      <label>📷 Foto</label>
       <video id="video" autoplay playsinline></video>
       <button type="button" id="capturar">Capturar Foto</button>
       <canvas id="canvas" width="300" height="200" style="display:none;"></canvas>
       <input type="hidden" name="foto" id="foto" />
       <img id="preview" style="display:none;" />
 
-      <br><br>
-
-      <!-- Firma -->
-      <label><b>Firma:</b></label><br>
-      <canvas id="canvasFirma" width="300" height="150" style="border:1px solid #000;"></canvas>
+      <label>✍️ Firma</label>
+      <canvas id="canvasFirma" width="300" height="150" style="border:1px solid #ccc; border-radius: 6px;"></canvas>
       <input type="hidden" name="firma" id="firma" />
-      <button type="button" id="limpiarFirma">Limpiar Firma</button>
+      <button type="button" class="small-button" id="limpiarFirma">Limpiar Firma</button>
 
       <button type="submit">Enviar</button>
     </form>
   </div>
 
   <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbx9suJ04N_t5T26WGs3e3cemP684TpGHFBCXIvcQpWCe9Z2RXGfy2amDtfXUGXkwCyZ/exec';
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbwZNnHx6iIu6ef9qNoEUX7TclFpjRwyfAPdC5JL9Cs7lIdyAljWuORTBQn9bXmodNsB/exec';
     const form = document.getElementById('formulario');
-
     const video = document.getElementById('video');
     const canvas = document.getElementById('canvas');
     const capturarBtn = document.getElementById('capturar');
@@ -89,24 +111,16 @@
     const preview = document.getElementById('preview');
     let stream;
 
-    function iniciarCamara() {
-      navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { exact: "environment" } }
-      }).then(mediaStream => {
-        stream = mediaStream;
-        video.srcObject = stream;
-        video.style.display = 'block';
-      }).catch(() => {
-        navigator.mediaDevices.getUserMedia({ video: true }).then(mediaStream => {
-          stream = mediaStream;
-          video.srcObject = stream;
-        }).catch(err => {
-          console.error("No se pudo acceder a la cámara", err);
+    async function iniciarCamara() {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { exact: "environment" } }
         });
-      });
+      } catch {
+        stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      }
+      video.srcObject = stream;
     }
-
-    iniciarCamara();
 
     capturarBtn.addEventListener('click', () => {
       canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
@@ -118,90 +132,116 @@
       if (stream) stream.getTracks().forEach(track => track.stop());
     });
 
-    // === FIRMA ===
+    // Firma
     const canvasFirma = document.getElementById('canvasFirma');
     const firmaInput = document.getElementById('firma');
     const limpiarBtn = document.getElementById('limpiarFirma');
     const ctx = canvasFirma.getContext('2d');
     let dibujando = false;
 
-    function empezarDibujo(x, y) {
+    function pos(e) {
+      const rect = canvasFirma.getBoundingClientRect();
+      const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+      const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+      return { x, y };
+    }
+
+    canvasFirma.addEventListener('mousedown', e => {
       dibujando = true;
+      const { x, y } = pos(e);
       ctx.beginPath();
       ctx.moveTo(x, y);
-    }
+    });
 
-    function dibujarLinea(x, y) {
+    canvasFirma.addEventListener('mousemove', e => {
       if (!dibujando) return;
+      const { x, y } = pos(e);
       ctx.lineTo(x, y);
       ctx.stroke();
-    }
+    });
 
-    function detenerDibujo() {
+    canvasFirma.addEventListener('mouseup', () => {
       dibujando = false;
       firmaInput.value = canvasFirma.toDataURL('image/png');
-    }
-
-    canvasFirma.addEventListener('mousedown', e => empezarDibujo(e.offsetX, e.offsetY));
-    canvasFirma.addEventListener('mousemove', e => dibujarLinea(e.offsetX, e.offsetY));
-    canvasFirma.addEventListener('mouseup', detenerDibujo);
-    canvasFirma.addEventListener('mouseleave', detenerDibujo);
+    });
 
     canvasFirma.addEventListener('touchstart', e => {
-      const rect = canvasFirma.getBoundingClientRect();
-      const touch = e.touches[0];
-      empezarDibujo(touch.clientX - rect.left, touch.clientY - rect.top);
+      dibujando = true;
+      const { x, y } = pos(e);
+      ctx.beginPath();
+      ctx.moveTo(x, y);
     });
+
     canvasFirma.addEventListener('touchmove', e => {
-      const rect = canvasFirma.getBoundingClientRect();
-      const touch = e.touches[0];
-      dibujarLinea(touch.clientX - rect.left, touch.clientY - rect.top);
+      if (!dibujando) return;
+      const { x, y } = pos(e);
+      ctx.lineTo(x, y);
+      ctx.stroke();
       e.preventDefault();
     });
-    canvasFirma.addEventListener('touchend', detenerDibujo);
+
+    canvasFirma.addEventListener('touchend', () => {
+      dibujando = false;
+      firmaInput.value = canvasFirma.toDataURL('image/png');
+    });
 
     limpiarBtn.addEventListener('click', () => {
       ctx.clearRect(0, 0, canvasFirma.width, canvasFirma.height);
       firmaInput.value = "";
     });
 
-    // === ENVIAR FORMULARIO ===
-    form.addEventListener('submit', e => {
+    // Enviar formulario
+    form.addEventListener('submit', async e => {
       e.preventDefault();
-
       if (!firmaInput.value) {
         firmaInput.value = canvasFirma.toDataURL('image/png');
       }
 
-      fetch(scriptURL, {
-        method: 'POST',
-        body: new FormData(form)
-      })
-      .then(response => response.json())
-      .then(data => {
+      Swal.fire({
+        title: 'Enviando...',
+        text: 'Por favor espera unos segundos',
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading()
+      });
+
+      try {
+        const response = await fetch(scriptURL, {
+          method: 'POST',
+          body: new FormData(form)
+        });
+        const data = await response.json();
+
         if (data.success) {
-          // Descargar PDF
+          Swal.fire({
+            icon: 'success',
+            title: '¡Formulario enviado!',
+            text: 'El PDF se descargará automáticamente.',
+            confirmButtonText: 'Aceptar'
+          });
+
           const a = document.createElement('a');
           a.href = data.pdfUrl;
           a.download = 'Prueba_de_Entrega.pdf';
           a.click();
 
-          alert("Formulario enviado correctamente.");
           form.reset();
           preview.style.display = 'none';
           ctx.clearRect(0, 0, canvasFirma.width, canvasFirma.height);
-
-          // Reiniciar cámara trasera
           iniciarCamara();
         } else {
-          alert("Error inesperado.");
+          throw new Error("Respuesta inesperada del servidor");
         }
-      })
-      .catch(err => {
-        alert("Error al enviar el formulario.");
+      } catch (err) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error al enviar',
+          text: 'Verifica tu conexión o intenta de nuevo.',
+        });
         console.error(err);
-      });
+      }
     });
+
+    iniciarCamara();
   </script>
 </body>
 </html>
