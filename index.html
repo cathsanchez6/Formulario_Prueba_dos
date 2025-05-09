@@ -272,11 +272,10 @@
     btnEnviar.disabled = true;
     btnEnviar.textContent = 'Enviando...';
 
-    fetch(url, {
-      method: "POST",
-      mode: "no-cors",
-      body: formData
-    });
+    fetch(scriptURL, {
+      method: 'POST',
+      body: new FormData(form)
+    })
 
     .then(res => res.json())
     .then(data => {
